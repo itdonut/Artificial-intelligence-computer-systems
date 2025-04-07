@@ -1,5 +1,6 @@
 import numpy as np
 from neural_network import NeuralNetwork
+from sklearn.neural_network import MLPRegressor
 
 class Perceptron:
     def __init__(self, weights, bias):
@@ -133,14 +134,21 @@ learning_rate=0.01 # the best learning rate is 0.01
 epochs=1000000
 
 nn.train(truth_table_inputs, expected_output, learning_rate=learning_rate, epochs=epochs)
-print_title(f"Neural Network Output <lr: {learning_rate}, epochs: {epochs}>")
+print_title(f"Neural Network <lr: {learning_rate}, epochs: {epochs}>")
 for input_data in truth_table_inputs:
     output = nn.forward(input_data)
-    print(f"Input: {input_data}, Output: {output}")
+    print(f"Input: {input_data}, Output: [{output[0]:.8f}]")
 
 nn.use_linear_activation = True
 nn.train(time_row_train_inputs, time_row_train_expected_output, learning_rate=learning_rate, epochs=epochs) 
-print_title("Neural Network Output (Time row) <lr: {learning_rate}, epochs: {epochs}>")
+print_title(f"Neural Network (Time row) <lr: {learning_rate}, epochs: {epochs}>")
 for input_data, expected in zip(time_row_inputs, time_row_expected_output):
     output = nn.forward(input_data)
     print(f"Input: {input_data}, Output: [{np.abs(output[0]):.8f}], Expected: [{expected[0]:.2f}], Error: [{(np.abs(expected[0] - output[0]) / expected[0] * 100):012.8f}]%")
+
+nn = MLPRegressor(hidden_layer_sizes=(100), activation='logistic', solver='lbfgs', max_iter=epochs)
+nn.fit(time_row_train_inputs, time_row_train_expected_output[:, 0])
+predicted_output = nn.predict(time_row_inputs)
+print_title(f"MLPRegressor Neural Network (Time row) <lr: 0.0001, epochs: {epochs}>")
+for input_data, expected, predicted in zip(time_row_inputs, time_row_expected_output[:, 0], predicted_output):
+    print(f"Input: {input_data}, Expected: [{expected:.2f}], Predicted: [{predicted:.8f}], Error: [{abs(expected - predicted) / expected * 100:012.8f}]%")
